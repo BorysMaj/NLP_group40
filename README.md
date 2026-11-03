@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 We are using python 3.14, here is how you reproduce our setup.
 
 ```bash
@@ -93,3 +94,7 @@ Some of the notebooks use [`mermaid`](https://mermaid.js.org/) diagrams. For exa
 ```
 
 If these are not rendering automatically (i.e., you see text instead of a diagram), you might need to upgrade your vscode instance to at least version [1.121.0](https://code.visualstudio.com/updates/v1_121#_mermaid-diagrams-in-markdown-preview-and-notebooks). If this is not possible, you should also be able to replicate this effect by installing the [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid).
+=======
+# NLP_group11
+Projects and tutorials for NLP1 course
+>>>>>>> a214e82eddf78bc7b0cb3cb5a0c040499040efb0
