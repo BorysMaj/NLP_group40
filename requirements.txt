@@ -14,3 +14,4 @@ tqdm
 ipywidgets
 baycomp
 certifi
+iterative-stratification
