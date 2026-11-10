@@ -8,6 +8,7 @@ from typing import Iterable, Sequence
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.metrics import (
     f1_score,
     hamming_loss,
@@ -115,6 +116,85 @@ def dataset_audit(
         pd.concat(label_counts, ignore_index=True),
         pd.DataFrame(overlap_rows),
     )
+
+
+def plot_bpe_token_lengths(
+    texts: Iterable[str],
+    tokenizer,
+    output_path: Path,
+    max_length: int = 30,
+) -> pd.Series:
+    """Plot BPE token counts and mark the sequence-length limit."""
+    lengths = pd.Series(
+        (len(tokenizer.encode(text).ids) for text in texts),
+        name="bpe_token_count",
+        dtype="int64",
+    )
+    if lengths.empty:
+        raise ValueError("Cannot plot BPE token lengths for an empty text collection")
+    if max_length < 1:
+        raise ValueError("max_length must be positive")
+
+    upper_edge = max(int(lengths.max()), max_length)
+    main_upper = min(100, upper_edge)
+    main_bins = np.arange(0.5, main_upper + 1.5, 1)
+    has_tail = upper_edge > main_upper
+    fig, axes = plt.subplots(
+        1,
+        2 if has_tail else 1,
+        figsize=(12 if has_tail else 8, 5),
+        gridspec_kw={"width_ratios": [3, 1]} if has_tail else None,
+    )
+    axes = np.atleast_1d(axes)
+    ax = axes[0]
+    ax.hist(
+        lengths[lengths <= main_upper],
+        bins=main_bins,
+        color="#4C78A8",
+        edgecolor="white",
+    )
+    ax.axvline(
+        max_length,
+        color="#D62728",
+        linestyle="--",
+        linewidth=2,
+        label=f"maximum length = {max_length}",
+    )
+    ax.set(
+        title="BPE token-length distribution",
+        xlabel="number of BPE tokens",
+        ylabel="number of comments",
+        xlim=(0.5, main_upper + 0.5),
+    )
+    tick_step = 10 if main_upper > 60 else 5
+    ticks = np.arange(0, main_upper + 1, tick_step)
+    if max_length not in ticks:
+        ticks = np.sort(np.append(ticks, max_length))
+    ax.set_xticks(ticks)
+    ax.legend()
+
+    if has_tail:
+        tail_ax = axes[1]
+        tail_lengths = lengths[lengths > main_upper]
+        tail_bins = np.arange(main_upper, upper_edge + 10, 10)
+        if tail_bins[-1] <= upper_edge:
+            tail_bins = np.append(tail_bins, tail_bins[-1] + 10)
+        tail_ax.hist(tail_lengths, bins=tail_bins, color="#F58518", edgecolor="white")
+        tail_ax.set(
+            title="Sparse tail",
+            xlabel="number of BPE tokens",
+            ylabel="number of comments",
+            xlim=(main_upper + 0.5, upper_edge + 0.5),
+        )
+        tail_ticks = np.linspace(main_upper, upper_edge, 5, dtype=int)
+        tail_ax.set_xticks(np.unique(tail_ticks))
+
+    fig.tight_layout()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=180, bbox_inches="tight")
+    plt.close(fig)
+    return lengths
 
 
 def multilabel_metrics(
